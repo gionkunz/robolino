@@ -1,0 +1,4 @@
+src/js/three-globals
+node_modules
+dist
+.tmp

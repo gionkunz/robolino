@@ -1,0 +1,13 @@
+.l-container {
+  display: flex;
+  height: 100%;
+
+  &__panel-a {
+    overflow: hidden;
+    width: 100%;
+  }
+
+  &__panel-b {
+    width: 0;
+  }
+}

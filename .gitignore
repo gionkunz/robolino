@@ -1,0 +1,8 @@
+node_modules
+dist
+npm-debug.log
+src/lib
+src/bower_components
+src/three.custom.min.js
+src/three.custom.min.js.map
+src/css
