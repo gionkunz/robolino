@@ -1,8 +1,9 @@
 import THREE from '../three';
 
+import extend from 'extend';
+
 import WAGNER from 'spite/Wagner';
 import 'spite/Wagner/Wagner.base';
-import ShaderLoader from 'spite/Wagner/ShaderLoader';
 
 import resourceSymbols from '../resource-symbols';
 import MaterialFactory from './material-factory';
@@ -11,10 +12,27 @@ WAGNER.vertexShadersPath = './assets/shaders/vertex';
 WAGNER.fragmentShadersPath = './assets/shaders/fragment';
 WAGNER.assetsPath = './assets';
 
+export const features = {
+  antiAliasing: 'antiAliasing',
+  depthOfField: 'depthOfField',
+  bloom: 'bloom',
+  glow: 'glow',
+  dirt: 'dirt'
+};
+
+const defaultFeatureSettings = {
+  [features.antiAliasing]: true,
+  [features.glow]: true,
+  [features.depthOfField]: true,
+  [features.bloom]: true,
+  [features.dirt]: true
+};
+
 export default class RenderingEngine {
-  constructor(container, timeMachine) {
+  constructor(container, timeMachine, featureSettings) {
     this.container = container;
     this.timeMachine = timeMachine;
+    this.featureSettings = extend({}, defaultFeatureSettings, featureSettings);
 
     this.renderer = new THREE.WebGLRenderer({
       antialias: false,
@@ -22,25 +40,26 @@ export default class RenderingEngine {
       preserveDrawingBuffer: true
     });
 
-    this.fov = 35;
+    this.fov = 50;
 
     this.cameraNear = 1;
     this.cameraFar = 10000;
-    this.depthNear = 150;
-    this.depthFar = 200;
+
+    this.clearColor = 0x030303;
 
     this.timeFactor = 0.1;
 
     this.width = container.offsetWidth;
     this.height = container.offsetHeight;
-    this.renderer.shadowMapType = THREE.PCFShadowMap;
-    this.renderer.shadowMapEnabled = true;
     this.renderer.setSize(this.width, this.height);
-    this.renderer.setClearColor(0x000000, 0);
+    this.renderer.setClearColor(this.clearColor, 0);
     this.renderer.autoClearColor = true;
 
+    this.renderer.shadowMapType = THREE.PCFShadowMap;
+    this.renderer.shadowMapEnabled = true;
+
     this.scene = new THREE.Scene();
-    this.scene.fog = new THREE.Fog(0x000000, 1, 1500);
+    this.scene.fog = new THREE.Fog(this.clearColor, 1, 1500);
 
     this.camera = new THREE.PerspectiveCamera(this.fov, this.width / this.height, this.cameraNear, this.cameraFar);
     this.camera.position.set(0, 50, 150);
@@ -91,24 +110,10 @@ export default class RenderingEngine {
   }
 
   initializeDepth() {
-    const shaderLoader = new ShaderLoader();
-    this.depthMaterial = new THREE.MeshBasicMaterial();
-    this.depthTexture = null;
-
-    shaderLoader.add('depth-vs', WAGNER.vertexShadersPath + '/packed-depth-vs.glsl');
-    shaderLoader.add('depth-fs', WAGNER.fragmentShadersPath + '/packed-depth-fs.glsl');
-    shaderLoader.load();
-    shaderLoader.onLoaded(function onLoaded() {
-      this.depthMaterial = new THREE.ShaderMaterial({
-        uniforms: {
-          mNear: {type: 'f', value: this.depthNear},
-          mFar: {type: 'f', value: this.depthFar}
-        },
-        vertexShader: shaderLoader.get('depth-vs'),
-        fragmentShader: shaderLoader.get('depth-fs'),
-        shading: THREE.SmoothShading
-      });
-    }.bind(this));
+    this.depth = {
+      material: MaterialFactory.material(resourceSymbols.materials.depthShader),
+      texture: null
+    };
   }
 
   initializeGlow() {
@@ -156,35 +161,54 @@ export default class RenderingEngine {
   }
 
   render() {
-    const delta = this.clock.getDelta();
-    THREE.AnimationHandler.update(delta * this.timeMachine.timeFactor);
+    this.lastTimeDelta = this.clock.getDelta();
+    THREE.AnimationHandler.update(this.lastTimeDelta * this.timeMachine.timeFactor);
+    this.controls.update(this.lastTimeDelta * this.timeMachine.timeFactor);
 
     this.renderer.autoClearColor = true;
     this.composer.reset();
 
-    this.renderDepth();
-    this.renderGlow();
+    if (this.featureSettings[features.depthOfField]) {
+      this.renderDepth();
+    }
+
+    if (this.featureSettings[features.glow]) {
+      this.renderGlow();
+    }
 
     this.composer.render(this.scene, this.camera);
-    this.composer.pass(this.passes.glowBlendPass);
-    this.composer.pass(this.passes.glowBlendPass);
-    this.composer.pass(this.passes.glowBlendPass);
-    this.composer.pass(this.passes.multiPassBloomPass);
-    this.composer.pass(this.passes.guidedFullBoxBlurPass);
-    this.composer.pass(this.passes.dirtPass);
-    this.composer.pass(this.passes.fxaaPass);
+
+    if (this.featureSettings[features.glow]) {
+      this.composer.pass(this.passes.glowBlendPass);
+      this.composer.pass(this.passes.glowBlendPass);
+      this.composer.pass(this.passes.glowBlendPass);
+    }
+
+    if (this.featureSettings[features.bloom]) {
+      this.composer.pass(this.passes.multiPassBloomPass);
+    }
+
+    if (this.featureSettings[features.depthOfField]) {
+      this.composer.pass(this.passes.guidedFullBoxBlurPass);
+    }
+
+    if (this.featureSettings[features.dirt]) {
+      this.composer.pass(this.passes.dirtPass);
+    }
+
+    if (this.featureSettings[features.antiAliasing]) {
+      this.composer.pass(this.passes.fxaaPass);
+    }
 
     this.composer.toScreen();
-
-    this.controls.update(delta * this.timeMachine.timeFactor);
 
     window.requestAnimationFrame(this.render.bind(this));
   }
 
   renderDepth() {
-    this.scene.overrideMaterial = this.depthMaterial;
-    this.composer.render(this.scene, this.camera, null, this.depthTexture);
-    this.passes.guidedFullBoxBlurPass.params.tBias = this.depthTexture;
+    this.scene.overrideMaterial = this.depth.material;
+    this.composer.render(this.scene, this.camera, null, this.depth.texture);
+    this.passes.guidedFullBoxBlurPass.params.tBias = this.depth.texture;
     this.scene.overrideMaterial = null;
   }
 
@@ -208,6 +232,14 @@ export default class RenderingEngine {
     this.scene.add(mesh);
   }
 
+  setFeature(feature, enabled) {
+    this.featureSettings[feature] = enabled;
+  }
+
+  isFeatureEnabled(feature) {
+    return this.featureSettings[feature];
+  }
+
   onWindowResize() {
     this.width = this.container.offsetWidth;
     this.height = this.container.offsetHeight;
@@ -218,8 +250,10 @@ export default class RenderingEngine {
     this.camera.updateProjectionMatrix();
 
     this.composer.setSize(this.width, this.height);
-    this.depthTexture = WAGNER.Pass.prototype.getOfflineTexture(this.width, this.height, false);
+
+    this.glow.composer.setSize(this.width, this.height);
     this.glow.texture = WAGNER.Pass.prototype.getOfflineTexture(this.width, this.height, false);
+    this.depth.texture = WAGNER.Pass.prototype.getOfflineTexture(this.width, this.height, false);
 
     this.controls.handleResize();
   }

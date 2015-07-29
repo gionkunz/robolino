@@ -14,7 +14,8 @@ export default {
   },
   shaders: {
     spherical: Symbol(),
-    vertexColor: Symbol()
+    vertexColor: Symbol(),
+    depth: Symbol()
   },
   materials: {
     grayMatter: Symbol(),
@@ -25,7 +26,8 @@ export default {
     organicGreen: Symbol(),
     darkMetal: Symbol(),
     chromeWalkway: Symbol(),
-    vertexColor: Symbol()
+    vertexColor: Symbol(),
+    depthShader: Symbol()
   },
   models: {
     cube: Symbol(),

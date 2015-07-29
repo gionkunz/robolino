@@ -28,10 +28,25 @@ const shaderDefinitions = {
   [resourceSymbols.shaders.vertexColor]: {
     vertex: './assets/shaders/vertex/vertex-color-vs.glsl',
     fragment: './assets/shaders/fragment/vertex-color-fs.glsl'
+  },
+  [resourceSymbols.shaders.depth]: {
+    vertex: './assets/shaders/vertex/packed-depth-vs.glsl',
+    fragment: './assets/shaders/fragment/packed-depth-fs.glsl'
   }
 };
 
 const materialDefinition = {
+  [resourceSymbols.materials.depthShader]: {
+    type: materialTypes.shader,
+    data: {
+      shaderKey: resourceSymbols.shaders.depth,
+      uniforms: {
+        mNear: {type: 'f', value: 150},
+        mFar: {type: 'f', value: 200}
+      },
+      shading: THREE.SmoothShading
+    }
+  },
   [resourceSymbols.materials.grayMatter]: {
     type: materialTypes.phong,
     data: {

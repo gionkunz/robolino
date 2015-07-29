@@ -1,16 +1,16 @@
 import 'fetch';
 
 import TimeMachine from './engine/time-machine';
-import RenderingEngine from './engine/rendering-engine';
+import RenderingEngine, {features as renderingFeatures} from './engine/rendering-engine';
 import WorldMap from './world/world-map';
 import resourceSymbols from './resource-symbols';
 import loadResources from './resources';
 import ModelFactory from './engine/model-factory';
 
 export const timeMachine = new TimeMachine(0.5);
-export let renderingEngine = new RenderingEngine(document.querySelector('.l-container__panel-a'), timeMachine);
+export const renderingEngine = new RenderingEngine(document.querySelector('.l-container__intrinsic'), timeMachine);
 
-loadResources().then(() => {
+export const resourceLoader = loadResources().then(() => {
   renderingEngine.initialize();
   new WorldMap(renderingEngine, 10);
 
