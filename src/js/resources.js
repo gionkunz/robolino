@@ -11,17 +11,23 @@ const textureDefinitions = {
   [resourceSymbols.textures.sphericalMatball03]: { url: './assets/textures/spherical/matball03.jpg'},
   [resourceSymbols.textures.sphericalDarkMetalAntistrophy]: { url: './assets/textures/spherical/dark-metal-antistrophy.jpg'},
   [resourceSymbols.textures.sphericalChromeRough]: { url: './assets/textures/spherical/metal-rough.jpg'},
+  [resourceSymbols.textures.sphericalMetalBlue]: { url: './assets/textures/spherical/LitSphere_example_3.jpg'},
   [resourceSymbols.textures.normalBumps]: {url: './assets/textures/normal/normal.jpg'},
   [resourceSymbols.textures.normalStone3]: {url: './assets/textures/normal/2563-normal.jpg'},
   [resourceSymbols.textures.normalSkin]: {url: './assets/textures/normal/295-normal.jpg'},
   [resourceSymbols.textures.normalTileEven]: {url: './assets/textures/normal/normalmap_tile_even.jpg'},
-  [resourceSymbols.textures.normalMetalWalkwayBumps]: {url: './assets/textures/normal/879-normal.jpg'}
+  [resourceSymbols.textures.normalMetalWalkwayBumps]: {url: './assets/textures/normal/879-normal.jpg'},
+  [resourceSymbols.textures.normalMetalPlates]: {url: './assets/textures/normal/1324-normal.jpg'}
 };
 
 const shaderDefinitions = {
   [resourceSymbols.shaders.spherical]: {
     vertex: './assets/shaders/vertex/spherical-vs.glsl',
     fragment: './assets/shaders/fragment/spherical-fs.glsl'
+  },
+  [resourceSymbols.shaders.vertexColor]: {
+    vertex: './assets/shaders/vertex/vertex-color-vs.glsl',
+    fragment: './assets/shaders/fragment/vertex-color-fs.glsl'
   }
 };
 
@@ -30,8 +36,7 @@ const materialDefinition = {
     type: materialTypes.phong,
     data: {
       color: 0xdddddd,
-      vertexColors: THREE.VertexColors,
-      normalMap: new DeferredCall(() => TextureFactory.texture(resourceSymbols.textures.normalStone3)),
+      normalMap: new DeferredCall(() => TextureFactory.texture(resourceSymbols.textures.normalTileEven)),
       normalScale: new THREE.Vector2(0.2, 0.2),
       shininess: 20,
       specular: 0xefefef
@@ -41,7 +46,6 @@ const materialDefinition = {
     type: materialTypes.phong,
     data: {
       color: 0xdddddd,
-      vertexColors: THREE.VertexColors,
       normalMap: new DeferredCall(() => TextureFactory.texture(resourceSymbols.textures.normalTileEven, {
         clone: true,
         overrides: {
@@ -67,7 +71,6 @@ const materialDefinition = {
     type: materialTypes.phong,
     data: {
       color: 0xffffff,
-      vertexColors: THREE.VertexColors,
       shininess: 0
     }
   },
@@ -82,22 +85,24 @@ const materialDefinition = {
     }
   },
   [resourceSymbols.materials.darkMetal]: {
-    type: materialTypes.spherical,
+    type: materialTypes.phong,
     data: {
-      uniforms: {
-        tMatCap: {value: new DeferredCall(() => TextureFactory.texture(resourceSymbols.textures.sphericalDarkMetalAntistrophy))},
-        tNormal: {
-          value: new DeferredCall(() => TextureFactory.texture(resourceSymbols.textures.normalSkin, {
-            clone: true,
-            overrides: {
-              wrapS: THREE.RepeatWrapping,
-              wrapT: THREE.RepeatWrapping
-            }
-          }))
-        },
-        useNormal: {value: 1},
-        repeat: {value: new THREE.Vector2(5, 5)}
-      }
+      color: 0xdddddd,
+      envMap: new DeferredCall(() => TextureFactory.texture(resourceSymbols.textures.sphericalBlack, {
+        clone: true,
+        overrides: {
+          mapping: THREE.SphericalReflectionMapping
+        }
+      })),
+      normalMap: new DeferredCall(() => TextureFactory.texture(resourceSymbols.textures.normalSkin, {
+        clone: true,
+        overrides: {
+          wrapS: THREE.RepeatWrapping,
+          wrapT: THREE.RepeatWrapping,
+          repeat: new THREE.Vector2(10, 10)
+        }
+      })),
+      normalScale: new THREE.Vector2(0.2, 0.2)
     }
   },
   [resourceSymbols.materials.chromeWalkway]: {
@@ -115,8 +120,8 @@ const materialDefinition = {
           }))
         },
         useNormal: {value: 1},
-        normalScale: {value: 0.3},
-        repeat: {value: new THREE.Vector2(5, 5)},
+        normalScale: {value: 0.1},
+        repeat: {value: new THREE.Vector2(8, 8)},
         useRim: {value: 1},
         rimPower: {value: 2.5}
       }
@@ -134,10 +139,10 @@ const materialDefinition = {
       }
     }
   },
-  [resourceSymbols.materials.glowBlue]: {
-    type: materialTypes.glow,
+  [resourceSymbols.materials.vertexColor]: {
+    type: materialTypes.shader,
     data: {
-      color: 0xdef3ff
+      shaderKey: resourceSymbols.shaders.vertexColor
     }
   }
 };
@@ -159,12 +164,20 @@ const modelDefinitions = {
       }
     }
   },
-  [resourceSymbols.models.glowCube]: {
-    url: './assets/models/glow-cube.dae',
+  [resourceSymbols.models.glowSphere]: {
+    url: './assets/models/glow-sphere.dae',
     options: {
       materials: {
-        material1: resourceSymbols.materials.redPhong,
-        material2: resourceSymbols.materials.glowBlue
+        material1: resourceSymbols.materials.vertexColor
+      }
+    }
+  },
+  [resourceSymbols.models.glowMesh]: {
+    url: './assets/models/glow-mesh.dae',
+    options: {
+      materials: {
+        material1: resourceSymbols.materials.darkMetal,
+        material2: resourceSymbols.materials.vertexColor
       }
     }
   }

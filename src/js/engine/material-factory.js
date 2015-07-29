@@ -3,19 +3,17 @@ import ShaderFactory from '../engine/shader-factory';
 import resourceSymbols from '../resource-symbols';
 import extend from 'extend';
 import {renderingEngine} from '../app';
-import GlowMaterial from './glow-material';
 
 export const materialTypes = {
   phong: Symbol(),
   shader: Symbol(),
-  glow: Symbol(),
   spherical: Symbol()
 };
 
 const materialFactoryFunctions = {
   [materialTypes.phong]: 'createPhongMaterial',
   [materialTypes.shader]: 'createShaderMaterial',
-  [materialTypes.glow]: 'createGlowMaterial',
+  [materialTypes.vertexColor]: 'createGlowMaterial',
   [materialTypes.spherical]: 'createSphericalMaterial'
 };
 const materials = new Map();
@@ -26,17 +24,15 @@ export default class MaterialFactory {
   }
 
   static createMaterial(key, type, data) {
+    data = extend({}, data, {
+      vertexColors: THREE.VertexColors
+    });
+
     return MaterialFactory[materialFactoryFunctions[type]](key, data);
   }
 
   static createPhongMaterial(key, data) {
     const material = new THREE.MeshPhongMaterial(data);
-    materials.set(key, material);
-    return material;
-  }
-
-  static createGlowMaterial(key, data) {
-    const material = new GlowMaterial(data);
     materials.set(key, material);
     return material;
   }
@@ -84,7 +80,12 @@ export default class MaterialFactory {
 
     data = extend(true, defaultData, data);
     data.shaderKey = resourceSymbols.shaders.spherical;
+    return MaterialFactory.createShaderMaterial(key, data);
+  }
 
+  static createGlowMaterial(key, data = {glowColor: 0xffffff}) {
+    data.shaderKey = resourceSymbols.shaders.vertexColor;
+    data.shading = THREE.SmoothShading;
     return MaterialFactory.createShaderMaterial(key, data);
   }
 }

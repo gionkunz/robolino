@@ -1,7 +1,6 @@
 import THREE from '../three';
 import Map from 'core-js/es6/map';
 import MaterialFactory from '../engine/material-factory';
-import resourceSymbols from '../resource-symbols';
 
 const models = new Map();
 const loader = new THREE.ColladaLoader();

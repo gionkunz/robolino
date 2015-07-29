@@ -8,14 +8,22 @@ import loadResources from './resources';
 import ModelFactory from './engine/model-factory';
 
 export const timeMachine = new TimeMachine(0.5);
-export const renderingEngine = new RenderingEngine(document.querySelector('.l-container__panel-a'), timeMachine);
+export let renderingEngine = new RenderingEngine(document.querySelector('.l-container__panel-a'), timeMachine);
 
 loadResources().then(() => {
+  renderingEngine.initialize();
   new WorldMap(renderingEngine, 10);
 
-  const model1 = ModelFactory.model(resourceSymbols.models.cube).group;
+  const model0 = ModelFactory.model(resourceSymbols.models.glowMesh).group.clone();
+  model0.needsUpdate = true;
+  model0.position.set(-30, 20, 0);
+  model0.rotateZ(45);
+  model0.scale.set(4, 4, 4);
+  renderingEngine.addMesh(model0);
+
+  const model1 = ModelFactory.model(resourceSymbols.models.cube).group.clone();
   model1.needsUpdate = true;
-  model1.position.set(15, 20, 0);
+  model1.position.set(-15, 20, 0);
   model1.scale.set(4, 4, 4);
   renderingEngine.addMesh(model1);
 
@@ -25,13 +33,14 @@ loadResources().then(() => {
   model2.scale.set(4, 4, 4);
   renderingEngine.addMesh(model2);
 
-  const model3 = ModelFactory.model(resourceSymbols.models.glowCube).group.clone();
+  const model3 = ModelFactory.model(resourceSymbols.models.glowSphere).group.clone();
   model3.needsUpdate = true;
-  model3.position.set(-15, 20, 0);
+  model3.position.set(15, 20, 0);
   model3.scale.set(4, 4, 4);
   renderingEngine.addMesh(model3);
 
   timeMachine.eventEmitter.on('tick', () => {
+    model0.rotateZ(-0.02);
     model1.rotateY(0.1);
     model2.rotateY(0.05);
     model3.rotateY(-0.08);

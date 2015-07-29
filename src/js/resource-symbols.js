@@ -4,14 +4,17 @@ export default {
     sphericalMatball03: Symbol(),
     sphericalDarkMetalAntistrophy: Symbol(),
     sphericalChromeRough: Symbol(),
+    sphericalMetalBlue: Symbol(),
     normalBumps: Symbol(),
     normalStone3: Symbol(),
     normalSkin: Symbol(),
     normalTileEven: Symbol(),
-    normalMetalWalkwayBumps: Symbol()
+    normalMetalWalkwayBumps: Symbol(),
+    normalMetalPlates: Symbol()
   },
   shaders: {
-    spherical: Symbol()
+    spherical: Symbol(),
+    vertexColor: Symbol()
   },
   materials: {
     grayMatter: Symbol(),
@@ -22,11 +25,12 @@ export default {
     organicGreen: Symbol(),
     darkMetal: Symbol(),
     chromeWalkway: Symbol(),
-    glowBlue: Symbol()
+    vertexColor: Symbol()
   },
   models: {
     cube: Symbol(),
-    glowCube: Symbol(),
+    glowSphere: Symbol(),
+    glowMesh: Symbol(),
     suzanne: Symbol()
   }
 };

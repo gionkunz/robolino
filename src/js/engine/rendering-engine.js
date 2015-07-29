@@ -1,14 +1,11 @@
 import THREE from '../three';
-import Map from 'core-js/es6/map';
 
 import WAGNER from 'spite/Wagner';
 import 'spite/Wagner/Wagner.base';
 import ShaderLoader from 'spite/Wagner/ShaderLoader';
 
 import resourceSymbols from '../resource-symbols';
-import TextureFactory from './texture-factory';
-
-import GlowMaterial from './glow-material';
+import MaterialFactory from './material-factory';
 
 WAGNER.vertexShadersPath = './assets/shaders/vertex';
 WAGNER.fragmentShadersPath = './assets/shaders/fragment';
@@ -29,8 +26,8 @@ export default class RenderingEngine {
 
     this.cameraNear = 1;
     this.cameraFar = 10000;
-    this.depthNear = 10;
-    this.depthFar = 600;
+    this.depthNear = 150;
+    this.depthFar = 200;
 
     this.timeFactor = 0.1;
 
@@ -61,46 +58,6 @@ export default class RenderingEngine {
     this.controls.dynamicDampingFactor = 0.15;
 
     this.createLights();
-    this.initializeDepthData();
-    this.initializeComposer();
-    this.initializePostEffects();
-    //this.initializeGlow();
-
-    container.appendChild(this.renderer.domElement);
-    window.addEventListener('resize', this.onWindowResize.bind(this), false);
-    this.onWindowResize();
-  }
-
-  render() {
-    const delta = this.clock.getDelta();
-    THREE.AnimationHandler.update(delta * this.timeMachine.timeFactor);
-
-    this.renderer.autoClearColor = true;
-    this.composer.reset();
-
-    this.scene.overrideMaterial = this.depthMaterial;
-    this.composer.render(this.scene, this.camera, null, this.depthTexture);
-
-    if (this.passes.has('guidedFullBoxBlurPass')) {
-      this.passes.get('guidedFullBoxBlurPass').params.tBias = this.depthTexture;
-    }
-
-    if (this.passes.has('ssaoPass')) {
-      this.passes.get('ssaoPass').params.texture = this.depthTexture;
-    }
-
-    this.scene.overrideMaterial = null;
-
-    this.composer.render(this.scene, this.camera);
-    for (let pass of this.passes.values()) {
-      this.composer.pass(pass);
-    }
-
-    this.composer.toScreen();
-    this.controls.update(delta * this.timeMachine.timeFactor);
-    //this.renderGlow();
-
-    window.requestAnimationFrame(this.render.bind(this));
   }
 
   createLights() {
@@ -122,7 +79,18 @@ export default class RenderingEngine {
     this.scene.add(this.light1);
   }
 
-  initializeDepthData() {
+  initialize() {
+    this.initializeDepth();
+    this.initializeComposer();
+    this.initializePostEffects();
+    this.initializeGlow();
+
+    this.container.appendChild(this.renderer.domElement);
+    window.addEventListener('resize', this.onWindowResize.bind(this), false);
+    this.onWindowResize();
+  }
+
+  initializeDepth() {
     const shaderLoader = new ShaderLoader();
     this.depthMaterial = new THREE.MeshBasicMaterial();
     this.depthTexture = null;
@@ -143,62 +111,97 @@ export default class RenderingEngine {
     }.bind(this));
   }
 
-  /*initializeGlow() {
-   const glowCamera = new THREE.PerspectiveCamera(this.fov, this.width / this.height, this.cameraNear, this.cameraFar);
-   glowCamera.position.set(0, 50, 150);
-   glowCamera.lookAt(this.scene.position);
-
-   this.glow = {
-   composer: new WAGNER.Composer(this.renderer),
-   scene: new THREE.Scene(),
-   camera: glowCamera,
-   texture: null,
-   material: new THREE.MeshBasicMaterial()
-   };
-
-   this.glowBlendPass = new WAGNER.BlendPass();
-   this.glow.scene.add(new THREE.AmbientLight(0xffffff));
-   this.glow.scene.overrideMaterial = this.glow.material;
-   this.glow.composer.setSize(this.width, this.height);
-   }*/
-
-  /*renderGlow() {
-   this.glow.composer.reset();
-   this.glow.composer.scene.children.forEach((child) => this.glow.composer.scene.remove(child));
-   this.scene.traverse((child) => {
-   if (child instanceof THREE.Mesh && child.material instanceof GlowMaterial) {
-   this.glow.composer.scene.add(child.clone());
-   }
-   });
-
-   this.renderer.render(this.glow.scene, this.glow.camera);
-   }*/
+  initializeGlow() {
+    this.glow = {
+      material: MaterialFactory.material(resourceSymbols.materials.vertexColor),
+      composer: new WAGNER.Composer(this.renderer, {
+        useRGBA: false
+      }),
+      blurPass: new WAGNER.FullBoxBlurPass(),
+      texture: null
+    };
+    this.glow.composer.setSize(this.width, this.height);
+  }
 
   initializeComposer() {
     this.composer = new WAGNER.Composer(this.renderer, {
       useRGBA: false
     });
     this.composer.setSize(this.width, this.height);
-    this.passes = new Map();
+    this.passes = {};
   }
 
   initializePostEffects() {
-    const fxaaPass = new WAGNER.FXAAPass();
-    this.passes.set('fxaaPass', fxaaPass);
+    this.passes.fxaaPass = new WAGNER.FXAAPass();
+
+    const glowBlendPass = new WAGNER.BlendPass();
+    glowBlendPass.params.mode = WAGNER.BlendMode.Screen;
+    this.passes.glowBlendPass = glowBlendPass;
 
     const multiPassBloomPass = new WAGNER.MultiPassBloomPass();
     multiPassBloomPass.params.blurAmount = 2;
     multiPassBloomPass.params.blendMode = WAGNER.BlendMode.Screen;
-    multiPassBloomPass.blendPass.params.opacity = 0.5;
-    this.passes.set('multiPassBloomPass', multiPassBloomPass);
+    multiPassBloomPass.blendPass.params.opacity = 0.3;
+    this.passes.multiPassBloomPass = multiPassBloomPass;
 
     const guidedFullBoxBlurPass = new WAGNER.GuidedFullBoxBlurPass();
     guidedFullBoxBlurPass.params.amount = 10;
     guidedFullBoxBlurPass.params.invertBiasMap = true;
-    this.passes.set('guidedFullBoxBlurPass', guidedFullBoxBlurPass);
+    this.passes.guidedFullBoxBlurPass = guidedFullBoxBlurPass;
 
     const dirtPass = new WAGNER.DirtPass();
-    this.passes.set('dirtPass', dirtPass);
+    dirtPass.params.blendMode = WAGNER.BlendMode.Screen;
+    dirtPass.blendPass.params.opacity = 0.2;
+    this.passes.dirtPass = dirtPass;
+  }
+
+  render() {
+    const delta = this.clock.getDelta();
+    THREE.AnimationHandler.update(delta * this.timeMachine.timeFactor);
+
+    this.renderer.autoClearColor = true;
+    this.composer.reset();
+
+    this.renderDepth();
+    this.renderGlow();
+
+    this.composer.render(this.scene, this.camera);
+    this.composer.pass(this.passes.glowBlendPass);
+    this.composer.pass(this.passes.glowBlendPass);
+    this.composer.pass(this.passes.glowBlendPass);
+    this.composer.pass(this.passes.multiPassBloomPass);
+    this.composer.pass(this.passes.guidedFullBoxBlurPass);
+    this.composer.pass(this.passes.dirtPass);
+    this.composer.pass(this.passes.fxaaPass);
+
+    this.composer.toScreen();
+
+    this.controls.update(delta * this.timeMachine.timeFactor);
+
+    window.requestAnimationFrame(this.render.bind(this));
+  }
+
+  renderDepth() {
+    this.scene.overrideMaterial = this.depthMaterial;
+    this.composer.render(this.scene, this.camera, null, this.depthTexture);
+    this.passes.guidedFullBoxBlurPass.params.tBias = this.depthTexture;
+    this.scene.overrideMaterial = null;
+  }
+
+  renderGlow() {
+    this.scene.overrideMaterial = this.glow.material;
+    this.composer.render(this.scene, this.camera, null, this.glow.texture);
+
+    this.glow.composer.reset();
+    this.glow.composer.setSource(this.glow.texture);
+    this.glow.blurPass.params.amount = 1;
+    this.glow.composer.pass(this.glow.blurPass);
+    this.glow.blurPass.params.amount = 2;
+    this.glow.composer.pass(this.glow.blurPass);
+    this.glow.composer.toTexture(this.glow.texture);
+
+    this.passes.glowBlendPass.params.tInput2 = this.glow.texture;
+    this.scene.overrideMaterial = null;
   }
 
   addMesh(mesh) {
@@ -215,8 +218,8 @@ export default class RenderingEngine {
     this.camera.updateProjectionMatrix();
 
     this.composer.setSize(this.width, this.height);
-    this.depthTexture = WAGNER.Pass.prototype.getOfflineTexture(this.width, this.height, true);
-    //this.glow.texture = WAGNER.Pass.prototype.getOfflineTexture(this.width, this.height, true);
+    this.depthTexture = WAGNER.Pass.prototype.getOfflineTexture(this.width, this.height, false);
+    this.glow.texture = WAGNER.Pass.prototype.getOfflineTexture(this.width, this.height, false);
 
     this.controls.handleResize();
   }
