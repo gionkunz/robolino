@@ -40,7 +40,7 @@ export default class RenderingEngine {
       preserveDrawingBuffer: true
     });
 
-    this.fov = 50;
+    this.fov = 35;
 
     this.cameraNear = 1;
     this.cameraFar = 10000;
