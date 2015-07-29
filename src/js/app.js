@@ -46,5 +46,21 @@ export const resourceLoader = loadResources().then(() => {
     model3.rotateY(-0.08);
   });
 
+  document.addEventListener('click', (event) => {
+    if (!event.target.matches('[robo-toggle-feature]')) {
+      return;
+    }
+
+    const featureName = event.target.getAttribute('robo-toggle-feature');
+    const enabled = renderingEngine.isFeatureEnabled(renderingFeatures[featureName]);
+    renderingEngine.setFeature(featureName, !enabled);
+  });
+
+  const fpsNumberElement = document.querySelector('.fps__number');
+
+  setInterval(() => {
+    fpsNumberElement.innerHTML = '' + Math.round(1 / renderingEngine.lastTimeDelta);
+  }, 300);
+
   renderingEngine.render();
 });

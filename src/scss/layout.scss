@@ -1,13 +1,22 @@
 .l-container {
   display: flex;
   height: 100%;
+  background-color: #111;
 
   &__panel-a {
     overflow: hidden;
-    width: 100%;
+    flex: 2;
+    max-width: 1000px;
   }
 
   &__panel-b {
-    width: 0;
+    flex: 1 0;
+    padding: 20px;
+    background-color: #333;
+  }
+
+  &__intrinsic {
+    height: 0;
+    padding-bottom: 56.25%;
   }
 }

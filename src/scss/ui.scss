@@ -1,0 +1,31 @@
+.button {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin: 15px 0;
+  background: transparent;
+  border: 2px solid $robo-text-color;
+  color: $robo-text-color;
+  font-size: 16px;
+  font-family: Roboto Condensed, sans-serif;
+  text-transform: uppercase;
+
+  transition: background .5s ease-out, color .5s ease-out;
+
+  &:hover {
+    background-color: $robo-text-color;
+    color: #333;
+  }
+}
+
+.fps {
+  font-family: Roboto Condensed, sans-serif;
+
+  &__title {
+    font-size: 16px;
+  }
+
+  &__number {
+    font-size: 30px;
+  }
+}

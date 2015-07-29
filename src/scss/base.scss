@@ -1,9 +1,23 @@
+@import "settings";
+
 html, body {
   position: absolute;
   width: 100%;
   height: 100%;
   box-sizing: border-box;
   margin: 0;
+  font-family: Roboto, sans-serif;
+  color: #dd1;
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: Roboto Condensed, sans-serif;
+  text-transform: uppercase;
+}
+
+.subtitle {
+  margin-bottom: 50px;
 }
 
 *, *:before, *:after {

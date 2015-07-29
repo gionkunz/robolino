@@ -22,7 +22,7 @@ global.paths = {
   'js': ['./src/js/**/*.js', '!./src/js/vendor/**'],
   'three': './src/js/vendor/**/*.js',
   // SASS sources.
-  'sass': './src/scss/**/*.scss',
+  'sass': './src/scss/app.scss',
   // Image sources.
   'img': './src/img/*',
   // Sources folder.
