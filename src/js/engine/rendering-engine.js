@@ -112,7 +112,8 @@ export default class RenderingEngine {
   initializeDepth() {
     this.depth = {
       material: MaterialFactory.material(resourceSymbols.materials.depthShader),
-      texture: null
+      texture: null,
+      downScale: 0.5
     };
   }
 
@@ -123,9 +124,10 @@ export default class RenderingEngine {
         useRGBA: false
       }),
       blurPass: new WAGNER.FullBoxBlurPass(),
-      texture: null
+      texture: null,
+      downScale: 0.5
     };
-    this.glow.composer.setSize(this.width, this.height);
+    this.glow.composer.setSize(this.width * this.glow.downScale, this.height * this.glow.downScale);
   }
 
   initializeComposer() {
@@ -220,8 +222,6 @@ export default class RenderingEngine {
     this.glow.composer.setSource(this.glow.texture);
     this.glow.blurPass.params.amount = 1;
     this.glow.composer.pass(this.glow.blurPass);
-    this.glow.blurPass.params.amount = 2;
-    this.glow.composer.pass(this.glow.blurPass);
     this.glow.composer.toTexture(this.glow.texture);
 
     this.passes.glowBlendPass.params.tInput2 = this.glow.texture;
@@ -251,9 +251,9 @@ export default class RenderingEngine {
 
     this.composer.setSize(this.width, this.height);
 
-    this.glow.composer.setSize(this.width, this.height);
-    this.glow.texture = WAGNER.Pass.prototype.getOfflineTexture(this.width, this.height, false);
-    this.depth.texture = WAGNER.Pass.prototype.getOfflineTexture(this.width, this.height, false);
+    this.glow.composer.setSize(this.width * this.glow.downScale, this.height * this.glow.downScale);
+    this.glow.texture = WAGNER.Pass.prototype.getOfflineTexture(this.width * this.glow.downScale, this.height * this.glow.downScale, false);
+    this.depth.texture = WAGNER.Pass.prototype.getOfflineTexture(this.width * this.depth.downScale, this.height * this.depth.downScale, false);
 
     this.controls.handleResize();
   }

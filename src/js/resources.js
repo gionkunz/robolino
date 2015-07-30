@@ -11,13 +11,14 @@ const textureDefinitions = {
   [resourceSymbols.textures.sphericalMatball03]: { url: './assets/textures/spherical/matball03.jpg'},
   [resourceSymbols.textures.sphericalDarkMetalAntistrophy]: { url: './assets/textures/spherical/dark-metal-antistrophy.jpg'},
   [resourceSymbols.textures.sphericalChromeRough]: { url: './assets/textures/spherical/metal-rough.jpg'},
-  [resourceSymbols.textures.sphericalMetalBlue]: { url: './assets/textures/spherical/LitSphere_example_3.jpg'},
+  [resourceSymbols.textures.sphericalMetalBlue]: { url: './assets/textures/spherical/LitSphere_example_2.jpg'},
   [resourceSymbols.textures.normalBumps]: {url: './assets/textures/normal/normal.jpg'},
   [resourceSymbols.textures.normalStone3]: {url: './assets/textures/normal/2563-normal.jpg'},
   [resourceSymbols.textures.normalSkin]: {url: './assets/textures/normal/295-normal.jpg'},
   [resourceSymbols.textures.normalTileEven]: {url: './assets/textures/normal/normalmap_tile_even.jpg'},
   [resourceSymbols.textures.normalMetalWalkwayBumps]: {url: './assets/textures/normal/879-normal.jpg'},
-  [resourceSymbols.textures.normalMetalPlates]: {url: './assets/textures/normal/1324-normal.jpg'}
+  [resourceSymbols.textures.normalMetalPlates]: {url: './assets/textures/normal/1324-normal.jpg'},
+  [resourceSymbols.textures.specularCracks]: {url: './assets/textures/specular/specular-map-cracks.jpg'}
 };
 
 const shaderDefinitions = {
@@ -51,7 +52,14 @@ const materialDefinition = {
     type: materialTypes.phong,
     data: {
       color: 0xdddddd,
-      normalMap: new DeferredCall(() => TextureFactory.texture(resourceSymbols.textures.normalTileEven)),
+      normalMap: new DeferredCall(() => TextureFactory.texture(resourceSymbols.textures.normalTileEven, {
+        clone: true,
+        overrides: {
+          wrapS: THREE.RepeatWrapping,
+          wrapT: THREE.RepeatWrapping,
+          repeat: new THREE.Vector2(0.5, 0.5)
+        }
+      })),
       normalScale: new THREE.Vector2(0.2, 0.2),
       shininess: 20,
       specular: 0xefefef
@@ -72,13 +80,44 @@ const materialDefinition = {
       normalScale: new THREE.Vector2(0.2, 0.2)
     }
   },
+  [resourceSymbols.materials.chromeWalkway]: {
+    type: materialTypes.phong,
+    data: {
+      color: 0xffffff,
+      wrapAround: true,
+      wrapRGB: new THREE.Vector3(2, 2, 2),
+      shininess: 20,
+      envMap: new DeferredCall(() => TextureFactory.texture(resourceSymbols.textures.sphericalChromeRough, {
+        clone: true,
+        overrides: {
+          mapping: THREE.SphericalReflectionMapping
+        }
+      })),
+      alphaMap: new DeferredCall(() => TextureFactory.texture(resourceSymbols.textures.specularCracks)),
+      normalMap: new DeferredCall(() => TextureFactory.texture(resourceSymbols.textures.normalMetalWalkwayBumps, {
+        clone: true,
+        overrides: {
+          wrapS: THREE.RepeatWrapping,
+          wrapT: THREE.RepeatWrapping,
+          repeat: new THREE.Vector2(6, 6)
+        }
+      })),
+      specular: 0xffffff
+    }
+  },
   [resourceSymbols.materials.redPhong]: {
     type: materialTypes.phong,
     data: {
       color: 0x882222,
+      normalMap: new DeferredCall(() => TextureFactory.texture(resourceSymbols.textures.normalTileEven, {
+        clone: true,
+        overrides: {
+          wrapS: THREE.RepeatWrapping,
+          wrapT: THREE.RepeatWrapping,
+          repeat: new THREE.Vector2(0.5, 0.5)
+        }
+      })),
       ambient: 0x882222,
-      specular: 0xffeeee,
-      perPixel: true,
       vertexColors: THREE.FaceColors
     }
   },
@@ -120,7 +159,7 @@ const materialDefinition = {
       normalScale: new THREE.Vector2(0.2, 0.2)
     }
   },
-  [resourceSymbols.materials.chromeWalkway]: {
+  /*[resourceSymbols.materials.chromeWalkway]: {
     type: materialTypes.spherical,
     data: {
       uniforms: {
@@ -141,7 +180,7 @@ const materialDefinition = {
         rimPower: {value: 2.5}
       }
     }
-  },
+  },*/
   [resourceSymbols.materials.organicGreen]: {
     type: materialTypes.spherical,
     data: {

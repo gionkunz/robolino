@@ -10,7 +10,8 @@ export default {
     normalSkin: Symbol(),
     normalTileEven: Symbol(),
     normalMetalWalkwayBumps: Symbol(),
-    normalMetalPlates: Symbol()
+    normalMetalPlates: Symbol(),
+    specularCracks: Symbol()
   },
   shaders: {
     spherical: Symbol(),

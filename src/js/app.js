@@ -57,9 +57,19 @@ export const resourceLoader = loadResources().then(() => {
   });
 
   const fpsNumberElement = document.querySelector('.fps__number');
+  const fpsAverage = {
+    fps: [],
+    push(fps) {
+      this.fps.push(fps);
+      if (this.fps.length > 5) {
+        this.fps.shift();
+      }
+      return Math.round(this.fps.reduce((prev, curr) => prev + curr, 0) / this.fps.length);
+    }
+  };
 
   setInterval(() => {
-    fpsNumberElement.innerHTML = '' + Math.round(1 / renderingEngine.lastTimeDelta);
+    fpsNumberElement.innerHTML = '' + fpsAverage.push(1 / renderingEngine.lastTimeDelta);
   }, 300);
 
   renderingEngine.render();
